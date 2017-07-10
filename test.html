@@ -1,0 +1,155 @@
+<html>
+ <head>
+  <title>测试SVG</title>
+  <!-- jquery and jqueryui -->
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <link href="external/jquery-ui.min.css" rel="stylesheet">
+  <script src="external/jquery-ui.min.js"></script>
+  <!-- d3js -->
+  <script type="text/javascript" src="external/d3.min.js"></script>
+  
+  <script type="text/javascript" src="lib/myRL.js"></script>
+  
+  <style>
+    #wrap {
+        width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    body {
+        font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    }
+
+    #draw {
+        margin-left: 100px;
+    }
+
+    #exp {
+        margin-top: 20px;
+        font-size: 16px;
+    }
+
+    svg {
+        cursor: pointer;
+    }
+
+    h2 {
+        text-align: center;
+        font-size: 30px;
+    }
+
+    #rewardui {
+        font-weight: bold;
+        font-size: 16px;
+    }
+  </style>
+  
+  <script type="application/javascript">
+    var Gridworld = function() {
+
+    }
+    Gridworld.prototype = {
+      reset: function() {
+        this.gh = 10;
+        this.gw = 10;
+        this.gs = this.gh * this.gw;
+
+        // reward array?
+        var Rarr = R.zeros(this.gs); // is R a variable in RL.js?
+        var T = R.zeros(this.gs);
+
+        Rarr[55] = 1;
+        Rarr[54] = -1;
+        //Rarr[63] = -1;
+        Rarr[64] = -1;
+        Rarr[65] = -1;
+        Rarr[85] = -1;
+        Rarr[86] = -1;
+
+        Rarr[37] = -1;
+        Rarr[33] = -1;
+        //Rarr[77] = -1;
+        Rarr[67] = -1;
+        Rarr[57] = -1;
+
+        // make some cliffs
+        for(q=0;q<8;q++) { var off = (q+1)*this.gh+2; T[off] = 1; Rarr[off] = 0; }
+        for(q=0;q<6;q++) { var off = 4*this.gh+q+2; T[off] = 1; Rarr[off] = 0; }
+        T[5*this.gh+2] = 0; Rarr[5*this.gh+2] = 0; // make a hole
+        this.Rarr = Rarr;
+        this.T = T;
+      },
+
+      reward: function(s, a, s1) {
+        return this.Rarr[s];
+      },
+
+      nextStateDistribution: function(s, a) {
+
+      }
+    }
+
+    var initGrid = function() {
+        var d3elt = d3.select('#draw');
+        d3elt.html('');
+
+        var w = 600;
+        var h = 600;
+
+        svg = d3elt.append('svg').attr('width',w).attr('height',h)
+          .append('g').attr('transform','scale(1)');
+
+        svg.append("defs").append("marker")
+          .attr("id","arrowhead")
+          .attr("refX",3)
+          .attr("refY",2)
+          .attr("markerWidth",3)
+          .attr("markerHeight",4)
+          .attr("orient","auto")
+          .append("path")
+            .attr("d", "M 0,0 V 4 L3,2 Z");
+
+    }
+
+    function drawGrid() {
+
+    }
+
+    function resetAll() {
+        env.reset();
+        agent.reset();
+        drawGrid();
+    }
+
+    var agent, env;
+    function start() {
+      // create environment
+      // create agent
+      initGrid();
+      drawGrid();
+
+      // other initialization, such as user interface parameters
+    }
+  </script>
+ </head>
+
+ <body onload="start();">
+ <div id="wrap">
+   <div>
+     <img src="loop.svg" style="width:50px;height:50px;float:left;">
+     <h1 style="font-size:50px;">强化学习<span style="color:#085;">示例</span></h1>
+   </div>
+   <h2>GridWorld: Dynamic Programming Demo</h2>
+   <div style="text-align:center;">
+     <button class="btn btn-warning" onclick="evaluatePolicy()" style="width:220px;height:50px;margin-bottom:5px;">Policy Evaluation (one sweep)</button>
+     <button class="btn btn-warning" onclick="updatePolicy()" style="width:170px;height:50px;margin-bottom:5px;">Policy Update</button>
+     <button class="btn btn-success" onclick="runValueIteration()" style="width:170px;height:50px;margin-bottom:5px;">Toggle Value Iteration</button>
+     <button class="btn btn-danger" onclick="resetAll()" style="width:170px;height:50px;margin-bottom:5px;">Reset</button>
+   </div>
+   <br>
+   <div id="draw"></div>
+   <br>
+   <hr>
+ </body>
+</html>
