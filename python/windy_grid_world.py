@@ -1,6 +1,6 @@
-'''
-有风格子世界
-'''
+#!/home/qiang/PythonEnv/venv/bin/python3.5
+# -*- coding: utf-8 -*-
+# #有风格子世界
 
 from random import random, choice
 
@@ -11,7 +11,7 @@ class Agent():
         self.E = {}
         # Agent knows what are the actions he could take
         self.actions = {}
-        self.policy = None;
+        self.policy = None
         return 
     
     def loadActions(self, env):
@@ -119,8 +119,7 @@ class Agent():
                 e = e + 1
                 self.__setEValueOf(Position_t_name, action_t.name, e)
                 
-                Positions_actions_list = list(zip(self.E.keys(),
-                                               self.E.values()))
+                Positions_actions_list = list(zip(self.E.keys(), self.E.values()))
                 for Position_name, actions_es_dic in Positions_actions_list:
                     actions_es_list = list(zip(actions_es_dic.keys(),
                                                actions_es_dic.values()))
@@ -347,7 +346,7 @@ if __name__ == "__main__":
     windy_grid_env = Environment()
     print("Learning...")
     sarsaLearningExample(myAgent, windy_grid_env)
-    #sarsaLambdaLearningExample(myAgent, windy_grid_env)
+    sarsaLambdaLearningExample(myAgent, windy_grid_env)
     
     
   
