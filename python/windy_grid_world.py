@@ -94,15 +94,20 @@ class Agent():
         total_time = 0
         time_in_episode = 0
         num_episode = 1
+        
         while num_episode <= max_episode_num:
             self.__resetEValue()
             env.reset()
             Position_t_name, _ = self.observe(env)
             action_t = self.performPolicy(Position_t_name, num_episode)
+            # maintain a event list
+            event_list = []
             # print(self.action_t.name)
             time_in_episode = 0
             while not self.__isNowInGoalPosition(env):
+                print('go')
                 # add code here
+                event_list.append((Position_t_name,action_t))
                 self.performAction(action_t, env)
                 Position_t1_name, reward_t1 = self.observe(env)
                 
@@ -118,19 +123,16 @@ class Agent():
                 e = self.__getEValueOf(Position_t_name, action_t.name)
                 e = e + 1
                 self.__setEValueOf(Position_t_name, action_t.name, e)
-                
-                Positions_actions_list = list(zip(self.E.keys(), self.E.values()))
-                for Position_name, actions_es_dic in Positions_actions_list:
-                    actions_es_list = list(zip(actions_es_dic.keys(),
-                                               actions_es_dic.values()))
-                    for action_name, e_value in actions_es_list:
-                        
-                        old_q = self.__getQValueOf(Position_name, action_name)
-                        #alpha = alpha / num_episode
-                        new_q = old_q + alpha * delta * e_value
-                        new_e = gamma * lambda_ * e_value
-                        self.__setQValueOf(Position_name, action_name, new_q)
-                        self.__setEValueOf(Position_name, action_name, new_e)
+
+                for pos, act in event_list:                        
+                    old_q = self.__getQValueOf(pos, act)
+                    old_e = self.__getEValueOf(pos, act)
+                    #alpha = alpha / num_episode
+                    new_q = old_q + alpha * delta * old_e
+                    new_e = gamma * lambda_ * old_e
+                    self.__setQValueOf(Position_name, action_name, new_q)
+                    self.__setEValueOf(Position_name, action_name, new_e)
+                    print("done")
                                         
                 if num_episode == max_episode_num:
                     # print current action series
@@ -345,7 +347,7 @@ if __name__ == "__main__":
     myAgent = Agent()
     windy_grid_env = Environment()
     print("Learning...")
-    sarsaLearningExample(myAgent, windy_grid_env)
+    # sarsaLearningExample(myAgent, windy_grid_env)
     sarsaLambdaLearningExample(myAgent, windy_grid_env)
     
     
