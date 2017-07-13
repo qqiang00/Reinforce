@@ -180,70 +180,79 @@
       this.reset();
     }
     PuckWorld.prototype = {
-      reset: function() {
-        this.ppx = Math.random(); // puck x,y
+      reset: function () {
+        this.ppx = Math.random(); // puck 个体
         this.ppy = Math.random();
-        this.pvx = Math.random()*0.05 -0.025; // velocity
-        this.pvy = Math.random()*0.05 -0.025;
-        this.tx = Math.random(); // target
+        this.pvx = Math.random() * 0.05 - 0.025; // 个体速率
+        this.pvy = Math.random() * 0.05 - 0.025;
+        this.tx = Math.random(); // 个体要追踪的目标
         this.ty = Math.random();
-        this.tx2 = Math.random(); // target
+        this.tx2 = Math.random(); // 要追踪的目标下一个位置？
         this.ty2 = Math.random(); // target
-        this.rad = 0.05;
-        this.t = 0;
+        this.rad = 0.05;    // 个体半径，对奖励没有关系，只为直观显示
+        this.t = 0;         // 时间
 
-        this.BADRAD = 0.25;
+        this.BADRAD = 0.15; // 红球惩罚范围
       },
-      getNumStates: function() {
+      getNumStates: function () {
         return 8; // x,y,vx,vy, puck dx,dy
       },
-      getMaxNumActions: function() {
+      getMaxNumActions: function () {
         return 5; // left, right, up, down, nothing
       },
-      getState: function() {
-        var s = [this.ppx - 0.5, this.ppy - 0.5, this.pvx * 10, this.pvy * 10, this.tx-this.ppx, this.ty-this.ppy, this.tx2-this.ppx, this.ty2-this.ppy];
+      getState: function () {
+        var s = [
+          this.ppx - 0.5, // 个体相对区域中心相对位置
+          this.ppy - 0.5,
+          this.pvx * 10,  // 个体速度
+          this.pvy * 10,
+          this.tx - this.ppx, // 追踪目标位置相对个体位置
+          this.ty - this.ppy,
+          this.tx2 - this.ppx,  // 惩罚大球位置相对个体位置
+          this.ty2 - this.ppy
+        ];
         return s;
       },
       sampleNextState: function(a) {
 
         // world dynamics
-        this.ppx += this.pvx; // newton
+        this.ppx += this.pvx; // 根据速度更新位置
         this.ppy += this.pvy;
-        this.pvx *= 0.95; // damping
+        this.pvx *= 0.95; // damping 个体速度自然衰减
         this.pvy *= 0.95;
 
         // agent action influences puck velocity
         var accel = 0.002;
-        if(a === 0) this.pvx -= accel;
-        if(a === 1) this.pvx += accel;
-        if(a === 2) this.pvy -= accel;
-        if(a === 3) this.pvy += accel;
+        if(a === 0) this.pvx -= accel;  // 控制直接作用于速度，左移
+        if(a === 1) this.pvx += accel;  // 右移
+        if(a === 2) this.pvy -= accel;  // 上移
+        if(a === 3) this.pvy += accel;  // 下移
 
         // handle boundary conditions and bounce
-        if(this.ppx < this.rad) {
-          this.pvx *= -0.5; // bounce!
-          this.ppx = this.rad;
+        if(this.ppx < this.rad) {       // 个体中心横坐标比其半径小，撞到左边界了
+          this.pvx *= -0.5; // bounce!  // 反弹速度有损失
+          this.ppx = this.rad;          // 重新确立其横坐标
         }
-        if(this.ppx > 1 - this.rad) {
+        if(this.ppx > 1 - this.rad) {   // 1为活动区域总宽度，撞到右边界
           this.pvx *= -0.5;
           this.ppx = 1 - this.rad;
-        }
-        if(this.ppy < this.rad) {
+        }                             
+        if(this.ppy < this.rad) {       // 上边界？
           this.pvy *= -0.5; // bounce!
           this.ppy = this.rad;
         }
-        if(this.ppy > 1 - this.rad) {
+        if(this.ppy > 1 - this.rad) {   // 下边界？
           this.pvy *= -0.5;
           this.ppy = 1 - this.rad;
         }
 
         this.t += 1;
-        if(this.t % 100 === 0) {
+        if(this.t % 100 === 0) {        // 隔一定时间就刷新依次目标球位置
           this.tx = Math.random(); // reset the target location
           this.ty = Math.random();
         }
 
-        // if(this.t % 73 === 0) {
+        // if(this.t % 73 === 0) {      // 
         //   this.tx2 = Math.random(); // reset the target location
         //   this.ty2 = Math.random();
         // }
@@ -251,21 +260,21 @@
         // compute distances
         var dx = this.ppx - this.tx;
         var dy = this.ppy - this.ty;
-        var d1 = Math.sqrt(dx*dx+dy*dy);
+        var d1 = Math.sqrt(dx*dx+dy*dy);  // 个体与目标球距离
 
         var dx = this.ppx - this.tx2;
         var dy = this.ppy - this.ty2;
-        var d2 = Math.sqrt(dx*dx+dy*dy);
+        var d2 = Math.sqrt(dx*dx+dy*dy);  // 个体与惩罚球距离
 
         var dxnorm = dx/d2;
         var dynorm = dy/d2;
         var speed = 0.001;
-        this.tx2 += speed * dxnorm;
+        this.tx2 += speed * dxnorm;       // 更新惩罚球位置，惩罚球永远直线逼近个体
         this.ty2 += speed * dynorm;
 
         // compute reward
-        var r = -d1; // want to go close to green
-        if(d2 < this.BADRAD) {
+        var r = -d1;      // 个体距离目标球越远，奖励越低
+        if(d2 < this.BADRAD) {    // 如果与惩罚球的距离过近，则奖励更低
           // but if we're too close to red that's bad
           r += 2*(d2 - this.BADRAD)/this.BADRAD;
         }
@@ -273,9 +282,9 @@
         //if(a === 4) r += 0.05; // give bonus for gliding with no force
 
         // evolve state in time
-        var ns = this.getState();
+        var ns = this.getState(); // 获取新状态
         var out = {'ns':ns, 'r':r};
-        return out;
+        return out;     // 这是环境给以的整体输出，新状态，奖励
       }
     }
     
@@ -283,7 +292,7 @@
     function gonormal() { steps_per_tick = 10; }
     function goslow() { steps_per_tick = 1; }
 
-    // flot stuff
+    // flot stuff 绘曲线图
     var nflot = 1000;
     function initFlot() {
       var container = $("#flotreward");
@@ -330,8 +339,8 @@
       return res;
     }
 
-    var steps_per_tick = 1;
-    var sid = -1;
+    var steps_per_tick = 1; // 控制运行速度
+    var sid = -1;           // 是否暂停标记
     var action, state;
     var smooth_reward_history = [];
     var smooth_reward = null;
@@ -386,7 +395,7 @@
         agent.epsilon = 0.05;
         $("#slider").slider('value', agent.epsilon);
         $("#eps").html(agent.epsilon.toFixed(2));
-        // kill learning rate to not learn
+        // kill learning rate to not learn 不学习
         agent.alpha = 0;
       });
     }
@@ -513,7 +522,7 @@ Exploration epsilon: <span id="eps">0.15</span> <div id="slider"></div>
 <div id="tdest"></div>
 
 <div>
-<div style="text-align:center">Average reward graph (high is good)</div>
+<div style="text-align:center">平均奖励 (high is good)</div>
 <div id="flotreward" style="width:800px; height: 400px;"></div>
 </div>
 
