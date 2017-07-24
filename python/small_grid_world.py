@@ -1,23 +1,23 @@
-# Implementation of small grid world example illustrated by David Silver
-# in his Reinforcement Learning Lecture3 - Planning by Dynamic 
-# Programming. 
-#
-# Author: Qiang Ye
-# Date: July 1, 2017
+'''
+Implementation of small grid world example illustrated by David Silver
+in his Reinforcement Learning Lecture3 - Planning by Dynamic 
+Programming. 
+Author: Qiang Ye
+Date: July 1, 2017
 
-# The value function converges to:
-#  0.00 -14.00 -20.00 -22.00 
-# -14.00 -18.00 -20.00 -20.00 
-# -20.00 -20.00 -18.00 -14.00 
-# -22.00 -20.00 -14.00   0.00 
-# At Iterate No.153
-
+The value function converges to:
+ 0.00 -14.00 -20.00 -22.00 
+-14.00 -18.00 -20.00 -20.00 
+-20.00 -20.00 -18.00 -14.00 
+-22.00 -20.00 -14.00   0.00 
+At Iterate No.153
+'''
 # id of the states, 0 and 15 are terminal states
 states = [i for i in range(16)]
-#  0  1  2   3  
+#  0* 1  2   3  
 #  4  5  6   7
 #  8  9  10  11
-#  12 13 14  15
+#  12 13 14  15*
 
 # initial values of states
 values = [0  for _ in range(16)]
@@ -41,7 +41,8 @@ gamma = 1.00
 # 根据当前状态和采取的行为计算下一个状态id以及得到的即时奖励
 def nextState(s, a):
   next_state = s
-  if (s%4 == 0 and a == "w") or (s<4 and a == "n") or ((s+1)%4 == 0 and a == "e") or (s > 11 and a == "s"):
+  if (s%4 == 0 and a == "w") or (s<4 and a == "n") or \
+     ((s+1)%4 == 0 and a == "e") or (s > 11 and a == "s"):
     pass
   else:
     ds = ds_actions[a]
@@ -70,8 +71,8 @@ def getSuccessors(s):
 # update the value of state s
 def updateValue(s):
   sucessors = getSuccessors(s)
-  newValue = 0 # values[s]
-  num = 4 # len(successors)
+  newValue = 0  # values[s]
+  num = 4       # len(successors)
   reward = rewardOf(s)
   for next_state in sucessors:
     newValue += 1.00/num * (reward + gamma * values[next_state])
@@ -87,9 +88,9 @@ def performOneIteration():
   printWorldOf(values)
 
 # show some array info of the small grid world
-def printWorldOf(s):
+def printWorldOf(v):
   for i in range(16):
-    print('{0:>6.2f}'.format(s[i]),end = " ")
+    print('{0:>6.2f}'.format(v[i]),end = " ")
     if (i+1)%4 == 0:
       print("")
   print()
@@ -108,7 +109,7 @@ def test():
     performOneIteration()
     printWorldOf(values)
     
-if __name__ == '__main__':
+def main():
   max_iterate_times = 160
   cur_iterate_times = 0
   while cur_iterate_times <= max_iterate_times:
@@ -116,5 +117,8 @@ if __name__ == '__main__':
     performOneIteration()
     cur_iterate_times += 1
   printWorldOf(values)
+
+if __name__ == '__main__':
+  main()
   
   

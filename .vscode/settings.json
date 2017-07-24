@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/home/qiang/PythonEnv/venv/bin/python3.5"
+    "python.pythonPath": "/home/qiang/PythonEnv/venv/bin/python3.5",
+    "editor.rulers": [80,120]
 }
