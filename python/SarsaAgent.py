@@ -63,7 +63,7 @@ class SarsaAgent(Agent):
                 s1 = str(s1)
                 self._assert_state_in_Q(s1, randomized = True)
                 # 在下行代码中添加参数use_epsilon = False即变城Q学习算法
-                a1 = self.performPolicy(s1, num_episode, use_epsilon=False)
+                a1 = self.performPolicy(s1, num_episode, use_epsilon=True)
                 old_q = self._get_Q(s0, a0)
                 q_prime = self._get_Q(s1, a1)
                 td_target = r1 + gamma * q_prime
@@ -116,7 +116,7 @@ class SarsaAgent(Agent):
 
 
 def main():
-    env = CliffWalk()
+    env = LargeGridWorld()
     agent = SarsaAgent(env,0)
     print("Learning...")  
     agent.sarsaLearning(gamma=0.9, 
