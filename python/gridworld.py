@@ -168,7 +168,7 @@ class GridWorldEnv(gym.Env):
         self.ends = [(7,3)]     # 终止格子坐标，可以有多个
         self.start = (0,3)      # 起始格子坐标，只有一个
         self.types = []         # 特殊种类的格子在此设置。[(3,2,1)]表示(3,2)处值为1
-        self.rewards= [(7,3,1)] # 特殊奖励的格子在此设置，终止格子奖励0
+        self.rewards= []        # 特殊奖励的格子在此设置，终止格子奖励0
         self.refresh_setting()
         self.viewer = None      # 图形接口对象
         self._seed()    # 产生一个随机子

@@ -58,12 +58,12 @@ class SarsaAgent(Agent):
             is_done = False
             while not is_done:
                 # add code here
-                s1, r1, is_done, info = self.env.step(a0)
+                s1, r1, is_done, info, total_reward = self.act(a0)
                 self.env.render()
                 s1 = str(s1)
                 self._assert_state_in_Q(s1, randomized = True)
                 # 在下行代码中添加参数use_epsilon = False即变城Q学习算法
-                a1 = self.performPolicy(s1, num_episode, use_epsilon=True)
+                a1 = self.performPolicy(s1, num_episode, use_epsilon=False)
                 old_q = self._get_Q(s0, a0)
                 q_prime = self._get_Q(s1, a1)
                 td_target = r1 + gamma * q_prime
@@ -78,8 +78,8 @@ class SarsaAgent(Agent):
                 s0, a0 = s1, a1
                 time_in_episode += 1
 
-            print("Episode {0} takes {1} steps.".
-                  format(num_episode, time_in_episode))
+            print("Episode {0} takes {1} steps. total Reward: {2}".
+                  format(num_episode, time_in_episode, total_reward))
             total_time += time_in_episode
             num_episode += 1
         return
@@ -116,7 +116,7 @@ class SarsaAgent(Agent):
 
 
 def main():
-    env = SimpleGridWorld()
+    env = CliffWalk()
     agent = SarsaAgent(env,0)
     print("Learning...")  
     agent.sarsaLearning(gamma=0.9, 

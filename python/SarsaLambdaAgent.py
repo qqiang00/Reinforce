@@ -59,7 +59,7 @@ class SarsaLambdaAgent(Agent):
             is_done = False
             while not is_done:
                 # add code here
-                s1, r1, is_done, info = self.env.step(a0)
+                s1, r1, is_done, info = self.act(a0)
                 self.env.render()
                 s1 = str(s1)
                 self._assert_state_in_QE(s1, randomized = True)
@@ -118,7 +118,6 @@ class SarsaLambdaAgent(Agent):
         return str(state)               # 的键值，应针对不同的状态值单独设计，
                                         # 这里仅针对格子世界
         
-
     def _get_(self, QorE, s, a):
         self._assert_state_in_QE(s, randomized=True)
         return QorE[s][a]
@@ -132,14 +131,16 @@ class SarsaLambdaAgent(Agent):
             for action in range(self.action_space.n):
                 value_dic[action] = 0.00
 
+
 def main():
-    env = WindyGridWorld()
+    env = CliffWalk()
     agent = SarsaLambdaAgent(env,0)
     print("Learning...")  
     agent.sarsaLambdaLearning(lambda_ = 0.01, 
                               gamma=0.9, 
                               alpha=0.1, 
                               max_episode_num=800)
+
 
 if __name__ == "__main__":
     main()

@@ -12,15 +12,17 @@ Transition = namedtuple("Transition", field_names=["state",
                                               "next_state"])
 class Episode(object):
     def __init__(self) -> None:
-        self.t_reward = 0           # 总的获得的奖励
+        self.total_reward = 0           # 总的获得的奖励
         self.len = 0                 # episode长度
         self.trans_list = []            # 一次状态转移
         self.cur_pos = -1               # 当前位置
         self.name = str(self.len)                # 名称
 
-    def push(self, trans:Transition) -> None:
+    def push(self, trans:Transition) -> float:
         self.trans_list.append(trans)
+        self.total_reward += trans[2]
         self.len += 1
+        return self.total_reward
 
     def pop(self) -> Transition:
         if self.len > 1:
@@ -121,12 +123,12 @@ class Agent(object):
         s1, r, is_done, info = self.env.step(a)
         # TODO add extra code here
         trans = Transition(self.state, a, r, is_done, info)
-        self.episode.push(trans)
+        total_reward = self.episode.push(trans)
         if is_done:
             self.episodes.append(self.episode)
             self.episode = Episode()
         self.state = s1
-        return 
+        return s1, r, is_done, info, total_reward
 
     def set_policy(self, policy_fun):
         self.policy_fun = policy_fun
