@@ -1,3 +1,12 @@
+"""
+This file illustrates how to personalize your gridworld environment
+by using GridWorldEnv
+
+License: MIT
+
+Author: Qiang Ye
+Date: July 25, 2017
+"""
 from gridworld import GridWorldEnv
 from gym import spaces
 

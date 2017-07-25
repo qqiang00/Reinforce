@@ -1,12 +1,11 @@
 """
-PuckWorld Environment for OpenAI gym
-
-The data used in this model comes from:
-http://cs.stanford.edu/people/karpathy/reinforcejs/puckworld.html
-
+General GridWorld Environment
 
 Author: Qiang Ye
 Date: July 22, 2017
+
+
+License: MIT
 """
 
 import math
