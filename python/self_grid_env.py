@@ -26,6 +26,7 @@ env.ends = [(11,0)]
 
 for i in range(10):
     env.rewards.append((i+1,0,-100))
+    env.ends.append((i+1,0))
 
 env.types = [(5,1,1),(5,2,1)]
 

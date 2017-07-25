@@ -116,7 +116,7 @@ class SarsaAgent(Agent):
 
 
 def main():
-    env = LargeGridWorld()
+    env = CliffWalk()
     agent = SarsaAgent(env,0)
     print("Learning...")  
     agent.sarsaLearning(gamma=0.9, 
