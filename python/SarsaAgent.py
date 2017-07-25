@@ -9,7 +9,7 @@ from random import random, choice
 from core import Agent
 from gym import Env
 import gym
-from gridworld import GridWorldEnv
+from gridworld import *
 
 class SarsaAgent(Agent):
     def __init__(self, env:Env, cap: 0):
@@ -27,7 +27,7 @@ class SarsaAgent(Agent):
     
     # using simple decaying epsilon greedy exploration
     def _curPolicy(self, s, episode_num, use_epsilon):
-        epsilon = 1.00 / (10*episode_num)
+        epsilon = 1.00 / episode_num
         Q_s = self.Q[s]
         str_act = "unknown"
         rand_value = random()
@@ -63,7 +63,7 @@ class SarsaAgent(Agent):
                 s1 = str(s1)
                 self._assert_state_in_Q(s1, randomized = True)
                 # 在下行代码中添加参数use_epsilon = False即变城Q学习算法
-                a1 = self.performPolicy(s1, num_episode, use_epsilon=False)
+                a1 = self.performPolicy(s1, num_episode, use_epsilon=True)
                 old_q = self._get_Q(s0, a0)
                 q_prime = self._get_Q(s1, a1)
                 td_target = r1 + gamma * q_prime
@@ -96,12 +96,12 @@ class SarsaAgent(Agent):
                 self.Q[s_name][action] = default_v
 
     def _assert_state_in_Q(self, s, randomized=True):
-        # 　cann't find the Position
+        # 　cann't find the state
         if not self._is_state_in_Q(s):
             self._init_state_value(s, randomized)
     
     def _get_state_name(self, state):   # 得到状态对应的字符串作为以字典存储的价值函数
-        return str(state)               # 的键值，应针对不同的状态值单独设计，
+        return str(state)               # 的键值，应针对不同的状态值单独设计，避免重复
                                         # 这里仅针对格子世界
         
 
@@ -114,8 +114,9 @@ class SarsaAgent(Agent):
         self.Q[s][a] = value
 
 
+
 def main():
-    env = GridWorldEnv(windy=False)
+    env = SimpleGridWorld()
     agent = SarsaAgent(env,0)
     print("Learning...")  
     agent.sarsaLearning(gamma=0.9, 

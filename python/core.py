@@ -40,8 +40,6 @@ class Episode(object):
         return self.len
 
 
-
-
 class ReplayMemory(object):
     """Replay Memory
     Attributes:
@@ -59,7 +57,11 @@ class ReplayMemory(object):
         self.position = 0
         self.memory = []
 
-    def push(self, s: np.ndarray, a: np.ndarray, r: np.ndarray, d: bool, s2: np.ndarray) -> None:
+    def push(self, s: np.ndarray, 
+                   a: np.ndarray, 
+                   r: np.ndarray, 
+                   d: bool, 
+                   s2: np.ndarray) -> None:
         """Stores values to the memory by creating a `Transition`
         Args:
             s (np.ndarray): State, shape (n, input_dim)
@@ -134,12 +136,4 @@ class Agent(object):
 
     def learn(self):
         raise ValueError("learn method should be rewrite by a subclass")
-
-
-class DQN(object):
-    '''深度Q学习网络，可以看成是一个行为价值函数的近似
-    '''
-    def __init__(self, input_ndim, output_ndim):
-        pass
-
 

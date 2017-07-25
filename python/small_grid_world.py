@@ -85,10 +85,10 @@ def performOneIteration():
     newValues[s] = updateValue(s)
   global values
   values = newValues
-  printWorldOf(values)
+  printValue(values)
 
 # show some array info of the small grid world
-def printWorldOf(v):
+def printValue(v):
   for i in range(16):
     print('{0:>6.2f}'.format(v[i]),end = " ")
     if (i+1)%4 == 0:
@@ -97,8 +97,8 @@ def printWorldOf(v):
       
 # test function
 def test():
-  printWorldOf(states)
-  printWorldOf(values)
+  printValue(states)
+  printValue(values)
   for s in states:
     reward = rewardOf(s)
     for a in actions:
@@ -107,7 +107,7 @@ def test():
 
   for i in range(200):
     performOneIteration()
-    printWorldOf(values)
+    printValue(values)
     
 def main():
   max_iterate_times = 160
@@ -116,7 +116,7 @@ def main():
     print("Iterate No.{0}".format(cur_iterate_times))
     performOneIteration()
     cur_iterate_times += 1
-  printWorldOf(values)
+  printValue(values)
 
 if __name__ == '__main__':
   main()

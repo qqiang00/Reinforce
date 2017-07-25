@@ -22,12 +22,12 @@ class Grid(object):
                        y:int = None, 
                        type:int = 0, 
                        reward:int = 0.0,
-                       value:float = 0.0):
+                       value:float = 0.0):  # value 属性备用
         self.x = x                  # 坐标x
         self.y = y
         self.type = value           # 类别值(0:空；1:障碍或边界)
         self.reward = reward        # 该格子的即时奖励
-        self.value = value          # 该格子的价值
+        self.value = value          # 该格子的价值，暂没用上
         self.name = None            # 该格子的名称
         self._update_name()
 
@@ -134,19 +134,26 @@ class GridWorldEnv(gym.Env):
         'video.frames_per_second': 30
         }
 
-    def __init__(self, windy=False):
-        self.width = 600            # 场景宽度 screen width
-        self.height = 420           # 场景长度
-        self.min_grid_size = 20     # 格子最大尺寸
-        self.max_grid_size = 30     # 格子最小尺寸
-        self.u_size = 60            # 当前格子绘制尺寸
-        self.n_width = 10           # 格子世界宽度（以格子数计）
-        self.n_height = 7           # 高度
+    def __init__(self, n_width:int=10,
+                       n_height:int = 7,
+                       u_size = 40,
+                       default_reward:float = 0,
+                       default_type = 0,
+                       windy=False):
+        self.u_size = u_size             # 当前格子绘制尺寸
+        self.n_width = n_width           # 格子世界宽度（以格子数计）
+        self.n_height = n_height         # 高度
+        self.width = u_size * n_width    # 场景宽度 screen width
+        self.height = u_size * n_height  # 场景长度
+        self.default_reward = default_reward
+        self.default_type = default_type
+        self._adjust_size()
+    
         self.grids = GridMatrix(n_width = self.n_width, 
                                 n_height = self.n_height,
-                                default_reward = -1.0,  # 默认奖励
-                                default_type = 0,       # 默认类型空，可以占据
-                                default_value = 0.0)    # 默认价值，暂时没啥用
+                                default_reward = self.default_reward,
+                                default_type = self.default_type, 
+                                default_value = 0.0)    
         self.reward = 0         # for rendering
         self.action = None      # for rendering
         self.windy = windy      # 是否是有风格子世界
@@ -162,14 +169,16 @@ class GridWorldEnv(gym.Env):
         self.start = (0,3)      # 起始格子坐标，只有一个
         self.types = []         # 特殊种类的格子在此设置。[(3,2,1)]表示(3,2)处值为1
         self.rewards= [(7,3,1)] # 特殊奖励的格子在此设置，终止格子奖励0
-        for x,y,r in self.rewards:
-            self.grids.set_reward(x,y,r)
-        for x,y,t in self.types:
-            self.grids.set_type(x,y,t)
-
+        self.refresh_setting()
         self.viewer = None      # 图形接口对象
         self._seed()    # 产生一个随机子
         self.reset()
+
+    def _adjust_size(self):
+        '''调整场景尺寸适合最大宽度、高度不超过800
+        '''
+        pass
+
 
     def _seed(self, seed=None):
         # 产生一个随机化时需要的种子，同时返回一个np_random对象，支持后续的随机化生成操作
@@ -193,10 +202,14 @@ class GridWorldEnv(gym.Env):
                 new_y += 2
 
         if action == 0: new_x -= 1   # left
-        if action == 1: new_x += 1   # right
-        if action == 2: new_y += 1   # up
-        if action == 3: new_y -= 1   # down
+        elif action == 1: new_x += 1   # right
+        elif action == 2: new_y += 1   # up
+        elif action == 3: new_y -= 1   # down
 
+        elif action == 4: new_x,new_y = new_x-1,new_y-1
+        elif action == 5: new_x,new_y = new_x+1,new_y-1
+        elif action == 6: new_x,new_y = new_x+1,new_y-1
+        elif action == 7: new_x,new_y = new_x+1,new_y+1
         # boundary effect
         if new_x < 0: new_x = 0
         if new_x >= self.n_width: new_x = self.n_width-1
@@ -229,6 +242,15 @@ class GridWorldEnv(gym.Env):
             return x[0] + self.n_width * x[1]
         return -1        # 未知状态
 
+    def refresh_setting(self):
+        '''用户在使用该类创建格子世界后可能会修改格子世界某些格子类型或奖励值
+        的设置，修改设置后通过调用该方法使得设置生效。
+        '''
+        for x,y,r in self.rewards:
+            self.grids.set_reward(x,y,r)
+        for x,y,t in self.types:
+            self.grids.set_type(x,y,t)
+
     def _reset(self):
         self.state = self._xy_to_state(self.start)
         return self.state   
@@ -247,24 +269,6 @@ class GridWorldEnv(gym.Env):
                 return True
         return False
 
-    def _compute_grid_size(self):
-        '''根据场景长宽、两个方向上的格子数量确定最终格子边长
-
-        return 60
-        size1 = self.width * 1.0 / self.n_width
-        size2 = self.height * 1.0 / self.n_height
-        
-        def min(x,y):
-            return x if x<=y else y
-        def max(x,y):
-            return x if x>=y else y
-
-        if min(size1, size2) > self.max_grid_size:
-            return self.max_grid_size
-        elif max(size1, size2) < self.min_grid_size:
-            return self.min_grid_size
-        return min(size1,size2)
-        '''
     # 图形化界面
     def _render(self, mode='human', close=False):
         if close:
@@ -296,7 +300,8 @@ class GridWorldEnv(gym.Env):
             # 5. 在渲染整个viewer之前，对有需要的geom的参数进行修改，修改主要基于该对象
             #    的Transform对象
             # 6. 调用Viewer的render()方法进行绘制
-            '''for i in range(self.n_width+1):
+            ''' 绘制水平竖直格子线，由于设置了格子之间的间隙，可不用此段代码
+            for i in range(self.n_width+1):
                 line = rendering.Line(start = (i*u_size, 0), 
                                       end =(i*u_size, u_size*self.n_height))
                 line.set_color(0.5,0,0)
@@ -337,13 +342,16 @@ class GridWorldEnv(gym.Env):
                         # 给终点方格添加金黄色边框
                         outline.set_color(0.9,0.9,0)
                         self.viewer.add_geom(outline)
+                    if self.start[0] == x and self.start[1] == y:
+                        outline.set_color(0.5, 0.5, 0.8)
+                        self.viewer.add_geom(outline)
                     if self.grids.get_type(x,y) == 1: # 障碍格子用深灰色表示
                         rect.set_color(0.3,0.3,0.3)
                     else:
                         pass
             # 绘制个体
             self.agent = rendering.make_circle(u_size/4, 30, True)
-            self.agent.set_color(1.0, 0.1, 0.1)
+            self.agent.set_color(1.0, 1.0, 0.0)
             self.viewer.add_geom(self.agent)
             self.agent_trans = rendering.Transform()
             self.agent.add_attr(self.agent_trans)
@@ -354,6 +362,107 @@ class GridWorldEnv(gym.Env):
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
+def LargeGridWorld():
+    '''10*10的一个格子世界环境，设置参照：
+    http://cs.stanford.edu/people/karpathy/reinforcejs/gridworld_td.html
+    '''
+    env = GridWorldEnv(n_width=10,
+                       n_height = 10,
+                       u_size = 40,
+                       default_reward = 0,
+                       default_type = 0,
+                       windy=False)
+    env.start = (0,9)
+    env.ends = [(5,4)]
+    env.types = [(4,2,1),(4,3,1),(4,4,1),(4,5,1),(4,6,1),(4,7,1),
+                 (1,7,1),(2,7,1),(3,7,1),(4,7,1),(6,7,1),(7,7,1),
+                 (8,7,1)]
+    env.rewards = [(3,2,-1),(3,6,-1),(5,2,-1),(6,2,-1),(8,3,-1),
+                   (8,4,-1),(5,4,1),(6,4,-1),(5,5,-1),(6,5,-1)]
+    env.refresh_setting()
+    return env
+
+def SimpleGridWorld():
+    '''无风10*7的格子，设置参照： David Silver强化学习公开课视频 第3讲   
+    '''
+    env = GridWorldEnv(n_width=10,
+                       n_height = 7,
+                       u_size = 60,
+                       default_reward = -1,
+                       default_type = 0,
+                       windy=False)
+    env.start = (0,3)
+    env.ends = [(7,3)]
+    env.rewards = [(7,3,1)]
+    env.refresh_setting()
+    return env    
+
+def WindyGridWorld():
+    '''有风10*7的格子，设置参照： David Silver强化学习公开课视频 第5讲   
+    '''
+    env = GridWorldEnv(n_width=10,
+                       n_height = 7,
+                       u_size = 60,
+                       default_reward = -1,
+                       default_type = 0,
+                       windy=True)
+    env.start = (0,3)
+    env.ends = [(7,3)]
+    env.rewards = [(7,3,1)]
+
+    env.refresh_setting()
+    return env    
+
+def RandomWalk():
+    '''随机行走示例环境
+    '''
+    env = GridWorldEnv(n_width=7,
+                       n_height = 1,
+                       u_size = 80,
+                       default_reward = 0,
+                       default_type = 0,
+                       windy=False)
+    env.action_space = spaces.Discrete(2) # left or right
+    env.start = (3,0)
+    env.ends = [(6,0),(0,0)]
+    env.rewards = [(6,0,1)]
+    env.refresh_setting()
+    return env   
+
+def CliffWalk():
+    '''悬崖行走格子世界环境
+    '''
+    env = GridWorldEnv(n_width=12,
+                       n_height = 4,
+                       u_size = 60,
+                       default_reward = -1,
+                       default_type = 0,
+                       windy=False)
+    env.action_space = spaces.Discrete(4) # left or right
+    env.start = (0,0)
+    env.ends = [(11,0)]
+    env.rewards=[]
+    for i in range(10):
+        env.rewards.append((i+1,0,-100))
+    env.refresh_setting()
+    return env   
+
+def SkullAndTreasure():
+    '''骷髅与钱币示例，解释随机策略的有效性 David Silver 强化学习公开课第六讲 策略梯度
+    '''
+    env = GridWorldEnv(n_width=5,
+                       n_height = 2,
+                       u_size = 60,
+                       default_reward = -1,
+                       default_type = 0,
+                       windy=False)
+    env.action_space = spaces.Discrete(4) # left or right
+    env.start = (0,1)
+    env.ends = [(2,0)]
+    env.rewards=[(0,0,-100),(2,0,100),(4,0,-100)]
+    env.types = [(1,0,1),(3,0,1)]
+    env.refresh_setting()
+    return env 
 
 if __name__ =="__main__":
     env = GridWorldEnv()

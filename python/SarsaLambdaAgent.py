@@ -10,7 +10,7 @@ from random import random, choice
 from core import Agent
 from gym import Env
 import gym
-from gridworld import GridWorldEnv
+from gridworld import *
 
 class SarsaLambdaAgent(Agent):
     def __init__(self, env:Env, cap: 0):
@@ -66,23 +66,23 @@ class SarsaLambdaAgent(Agent):
                 # 在下行代码中添加参数use_epsilon = False即变成Q学习算法
                 a1= self.performPolicy(s1, num_episode)
 
-                q = self._get_Q(s0, a0)
-                q_prime = self._get_Q(s1, a1)
+                q = self._get_(self.Q, s0, a0)
+                q_prime = self._get_(self.Q, s1, a1)
                 delta = r1 + gamma * q_prime - q
 
-                e = self._get_E(s0,a0)
+                e = self._get_(self.E, s0,a0)
                 e = e + 1
-                self._set_E(s0, a0, e)
+                self._set_(self.E, s0, a0, e)
 
                 state_action_list = list(zip(self.E.keys(),self.E.values()))
                 for s, a_es in state_action_list:
                     for a in range(self.action_space.n):
                         e_value = a_es[a]
-                        old_q = self._get_Q(s, a)
+                        old_q = self._get_(self.Q, s, a)
                         new_q = old_q + alpha * delta * e_value
                         new_e = gamma * lambda_ * e_value
-                        self._set_Q(s, a, new_q)
-                        self._set_E(s, a, new_e)
+                        self._set_(self.Q, s, a, new_q)
+                        self._set_(self.E, s, a, new_e)
 
                 if num_episode == max_episode_num:
                     # print current action series
@@ -119,21 +119,13 @@ class SarsaLambdaAgent(Agent):
                                         # 这里仅针对格子世界
         
 
-    def _get_Q(self, s, a):
+    def _get_(self, QorE, s, a):
         self._assert_state_in_QE(s, randomized=True)
-        return self.Q[s][a]
+        return QorE[s][a]
 
-    def _set_Q(self, s, a, value):
+    def _set_(self, QorE, s, a, value):
         self._assert_state_in_QE(s, randomized=True)
-        self.Q[s][a] = value
-
-    def _get_E(self, s, a):
-        self._assert_state_in_QE(s, randomized=True)
-        return self.E[s][a]
-
-    def _set_E(self, s, a, value):
-        self._assert_state_in_QE(s, randomized=True)
-        self.E[s][a] = value
+        QorE[s][a] = value
 
     def _resetEValue(self):
         for value_dic in self.E.values():
@@ -141,7 +133,7 @@ class SarsaLambdaAgent(Agent):
                 value_dic[action] = 0.00
 
 def main():
-    env = GridWorldEnv(windy=False)
+    env = WindyGridWorld()
     agent = SarsaLambdaAgent(env,0)
     print("Learning...")  
     agent.sarsaLambdaLearning(lambda_ = 0.01, 
