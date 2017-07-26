@@ -115,12 +115,18 @@ class SarsaAgent(object):
 
 
 def main():
-    env = SimpleGridWorld()
+
+    env = gym.make("SimpleGridWorld-v0")
+    #directory = "/home/qiang/workspace/reinforce/python/monitor"
+    
+    env = gym.wrappers.Monitor(env)
     agent = SarsaAgent(env)
+    env.reset()
     print("Learning...")  
     agent.learning(gamma=0.9, 
                    alpha=0.1, 
-                   max_episode_num=800)
+                   max_episode_num=500)
+
 
 if __name__ == "__main__":
     main()
