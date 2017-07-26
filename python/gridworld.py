@@ -441,7 +441,7 @@ def CliffWalk():
     env.start = (0,0)
     env.ends = [(11,0)]
     # env.rewards=[]
-    env.types = [(5,1,1),(5,2,1)]
+    # env.types = [(5,1,1),(5,2,1)]
     for i in range(10):
         env.rewards.append((i+1,0,-100))
         env.ends.append((i+1,0))

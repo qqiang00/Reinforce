@@ -12,8 +12,8 @@ import gym
 from gridworld import *
 
 class SarsaAgent(Agent):
-    def __init__(self, env:Env, cap: 0):
-        super(SarsaAgent, self).__init__(env, cap)
+    def __init__(self, env:Env, capacity:int = 20000):
+        super(SarsaAgent, self).__init__(env, capacity)
         #Agent.__init__(self, env, cap)
         # 保存一些Agent可以观测到的环境信息以及已经学到的经验
         self.Q = {}  # {s0:[,,,,,,],s1:[,,,,,]} 数组内元素个数为行为空间大小
@@ -50,7 +50,8 @@ class SarsaAgent(Agent):
         time_in_episode = 0
         num_episode = 1
         while num_episode <= max_episode_num:
-            s0 = str(self.env.reset())
+            self.state = str(self.env.reset())
+            s0 = self.state
             self.env.render()
             a0 = self.performPolicy(s0, num_episode)
             # print(self.action_t.name)
@@ -70,18 +71,14 @@ class SarsaAgent(Agent):
                 #alpha = alpha / num_episode
                 new_q = old_q + alpha * (td_target - old_q)
                 self._set_Q(s0, a0, new_q)
-
-                if num_episode == max_episode_num:
-                    # print current action series
-                    print("t: {0:>2}: s: {1}, a:{2:2}, s1: {3}".
-                          format(time_in_episode, s0, a0, s1))
                 s0, a0 = s1, a1
                 time_in_episode += 1
 
-            print("Episode {0} takes {1} steps. total Reward: {2}".
-                  format(num_episode, time_in_episode, total_reward))
+            print(self.experience.last)
+            
             total_time += time_in_episode
             num_episode += 1
+        self.experience.last.print_detail()
         return
 
 
@@ -116,12 +113,14 @@ class SarsaAgent(Agent):
 
 
 def main():
-    env = CliffWalk()
-    agent = SarsaAgent(env,0)
+    env = WindyGridWorld()
+    agent = SarsaAgent(env, capacity = 2000)
     print("Learning...")  
     agent.sarsaLearning(gamma=0.9, 
                         alpha=0.1, 
                         max_episode_num=800)
 
+
+    print(agent.experience)
 if __name__ == "__main__":
     main()
