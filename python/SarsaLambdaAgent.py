@@ -133,7 +133,7 @@ class SarsaLambdaAgent(Agent):
 
 
 def main():
-    env = CliffWalk()
+    env = ()
     agent = SarsaLambdaAgent(env,0)
     print("Learning...")  
     agent.sarsaLambdaLearning(lambda_ = 0.01, 

@@ -116,10 +116,10 @@ class SarsaAgent(object):
 
 def main():
 
-    env = gym.make("SimpleGridWorld-v0")
-    #directory = "/home/qiang/workspace/reinforce/python/monitor"
+    env = gym.make("WindyGridWorld-v0")
+    directory = "/home/qiang/workspace/reinforce/python/monitor"
     
-    env = gym.wrappers.Monitor(env)
+    env = gym.wrappers.Monitor(env, directory, force=True)
     agent = SarsaAgent(env)
     env.reset()
     print("Learning...")  

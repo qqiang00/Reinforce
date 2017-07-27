@@ -5,13 +5,7 @@ import numpy as np
 from collections import namedtuple
 from typing import List
 import random
-'''
-Transition = namedtuple("Transition", field_names=["state",
-                                              "action",
-                                              "reward",
-                                              "is_done",
-                                              "next_state"])
-'''
+
 
 class State(object):
     def __init__(self,name):
@@ -32,11 +26,10 @@ class Transition(object):
 
 
 class Episode(object):
-    def __init__(self, id:int = 0) -> None:
-        self.total_reward = 0       # 总的获得的奖励
-        # self.len = 0                # episode长度
-        self.trans_list = []        # 状态转移列表
-        self.name = str(id)   # 可以给Episode起个名字："成功闯关,黯然失败？"
+    def __init__(self, e_id:int = 0) -> None:
+        self.total_reward = 0   # 总的获得的奖励
+        self.trans_list = []    # 状态转移列表
+        self.name = str(e_id)     # 可以给Episode起个名字："成功闯关,黯然失败？"
 
     def push(self, trans:Transition) -> float:
         self.trans_list.append(trans)
@@ -57,19 +50,21 @@ class Episode(object):
             print("step{0:<3} ".format(i),end=" ")
             print(trans)
 
-    '''
     def pop(self) -> Transition:
+        '''normally this method shouldn't be invoked.
+        '''
         if self.len > 1:
-            self.len -= 1
             trans = self.trans_list.pop()
-            self.total_reward -= trans[2]
+            self.total_reward -= trans.reward
             return trans
         else:
             return None
-    '''
 
     def is_complete(self) -> bool:
-        if self.len == 0: return False 
+        '''check if an episode is an complete episode
+        '''
+        if self.len == 0: 
+            return False 
         return self.trans_list[self.len-1].is_done
 
     def sample(self,batch_size = 1):   
@@ -81,27 +76,40 @@ class Episode(object):
         return self.len
 
 class Experience(object):
+    '''this class is used to record the whole experience of an agent organized
+    by an episode list. agent can randomly sample transitions or episodes from
+    its experience.
+    '''
     def __init__(self, capacity:int = 20000):
         self.capacity = capacity    # 容量：指的是trans总数量
-        self.episodes = []      # episode列表
+        self.episodes = []          # episode列表
         self.next_id = 0            # 下一个episode的Id
-        self.total_trans = 0    # 总的转换数量
+        self.total_trans = 0        # 总的状态转换数量
         
     def __str__(self):
         return "exp info:{0} episodes, memory usage {1}/{2}".\
                 format(self.len, self.total_trans, self.capacity)
 
+    def __len__(self):
+        return self.len
+
     @property
     def len(self):
         return len(self.episodes)
 
-    def _remove(self,index = 0):      # 扔掉一个Episode，默认第一个
+    def _remove(self, index = 0):      
+        '''扔掉一个Episode，默认第一个。
+           remove an episode, defautly the first one.
+           args: 
+               the index of the episode to remove
+           return:
+               if exists return the episode else return None
+        '''
         if index > self.len - 1:
             raise(Exception("invalid index"))
         if self.len > 0:
             episode = self.episodes[index]
             self.episodes.remove(episode)
-            # self.len -= 1
             self.total_trans -= episode.len
             return episode
         else:
@@ -128,6 +136,12 @@ class Experience(object):
         return cur_episode.push(trans)      #return  total reward of an episode
 
     def sample(self, batch_size=1): # sample transition
+        '''randomly sample some transitions from agent's experience.abs
+        args:
+            number of transitions need to be sampled
+        return:
+            list of Transition.
+        '''
         sample_trans = []
         for _ in range(batch_size):
             index = int(random.random() * self.len)
@@ -151,7 +165,7 @@ class Agent(object):
         self.obs_space = env.observation_space if env is not None else None
         self.action_space = env.action_space if env is not None else None
         self.experience = Experience(capacity = trans_capacity)
-        self.state = None   # current state of agent
+        self.state = None   # current observation of an agent
     
     def performPolicy(self,policy_fun, s):
         if policy_fun is None:
@@ -167,5 +181,7 @@ class Agent(object):
         return s1, r1, is_done, info, total_reward
 
     def learn(self):
+        '''need to be implemented by all subclasses
+        '''
         raise NotImplementedError
 
