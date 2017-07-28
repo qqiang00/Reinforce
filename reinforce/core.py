@@ -1,3 +1,10 @@
+#!/home/qiang/PythonEnv/venv/bin/python3.5
+# -*- coding: utf-8 -*-
+# core file of reinforcment learning
+
+# Author: Qiang Ye
+# Date: July 23, 2017
+
 from random import random, choice
 import gym
 from gym import Env
@@ -165,7 +172,7 @@ class Agent(object):
         self.obs_space = env.observation_space if env is not None else None
         self.action_space = env.action_space if env is not None else None
         self.experience = Experience(capacity = trans_capacity)
-        self.state = None   # current observation of an agent
+        self._state = None   # current observation of an agent
     
     def performPolicy(self,policy_fun, s):
         if policy_fun is None:
@@ -177,7 +184,7 @@ class Agent(object):
         # TODO add extra code here
         trans = Transition(self.state, a0, r1, is_done, s1)
         total_reward = self.experience.push(trans)
-        self.state = s1
+        self._state = s1
         return s1, r1, is_done, info, total_reward
 
     def learn(self):
@@ -185,3 +192,9 @@ class Agent(object):
         '''
         raise NotImplementedError
 
+
+
+
+
+
+    
