@@ -98,8 +98,8 @@ class PuckWorldEnv(gym.Env):
         
         self.t += 1
         if self.t % self.update_time == 0:  # update target position
-            tx = self._random_pos();        # randomly
-            ty = self._random_pos();
+            tx = self._random_pos()         # randomly
+            ty = self._random_pos()
 
         dx, dy = ppx - tx, ppy - ty         # calculate distance from
         dis = self._compute_dis(dx, dy)     # agent to target

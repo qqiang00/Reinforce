@@ -225,7 +225,7 @@ class GridWorldEnv(gym.Env):
         done = self._is_end_state(new_x, new_y) 
         self.state = self._xy_to_state(new_x, new_y)
         # 提供格子世界所有的信息在info内
-        return self.state, self.reward, done, {"x":new_x,"y":new_y,
+        return np.array(self.state), self.reward, done, {"x":new_x,"y":new_y,
                                                "grids":self.grids}
     # 将状态变为横纵坐标
     def _state_to_xy(self, s):

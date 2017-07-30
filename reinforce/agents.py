@@ -10,7 +10,7 @@ from gym import Env
 import gym
 from gridworld import *
 from core import Transition, Experience, Agent
-from func_approximator import NeuralNetwork
+from approximator import NeuralNetwork
 
 
 class SarsaAgent(Agent):
@@ -28,8 +28,8 @@ class SarsaAgent(Agent):
         self._assert_state_in_Q(s_name, randomized = False)
     
     # using simple decaying epsilon greedy exploration
-    def _curPolicy(self, s, episode_num, use_epsilon):
-        epsilon = 1.00 / episode_num
+    def _curPolicy(self, s, num_episode, use_epsilon):
+        epsilon = 1.00 / num_episode
         Q_s = self.Q[s]
         str_act = "unknown"
         rand_value = random()
@@ -42,16 +42,16 @@ class SarsaAgent(Agent):
         return action
 
     # Agent依据当前策略和状态决定下一步的动作
-    def performPolicy(self, s, episode_num, use_epsilon=True):
-        return self._curPolicy(s, episode_num, use_epsilon)
+    def performPolicy(self, s, num_episode, use_epsilon=True):
+        return self._curPolicy(s, num_episode, use_epsilon)
 
     # sarsa learning
-    def sarsaLearning(self, gamma, alpha, max_episode_num):
+    def sarsaLearning(self, gamma, alpha, max_num_episode):
         # self.Position_t_name, self.reward_t1 = self.observe(env)
         total_time = 0
         time_in_episode = 0
         num_episode = 1
-        while num_episode <= max_episode_num:
+        while num_episode <= max_num_episode:
             self.state = str(self.env.reset())
             s0 = self.state
             self.env.render()
@@ -62,7 +62,7 @@ class SarsaAgent(Agent):
             while not is_done:
                 # add code here
                 s1, r1, is_done, info, total_reward = self.act(a0)
-                self.env.render()
+                #self.env.render()
                 s1 = str(s1)
                 self._assert_state_in_Q(s1, randomized = True)
                 # 在下行代码中添加参数use_epsilon = False即变城Q学习算法
@@ -121,17 +121,17 @@ class SarsaLambdaAgent(Agent):
         # 保存一些Agent可以观测到的环境信息以及已经学到的经验
         self.Q = {}  # {s0:[,,,,,,],s1:[]} 数组内元素个数为行为空间大小
         self.E = {}  # Elegibility Trace
-        self.resetAgent()
+        self._init_agent()
         return
 
-    def resetAgent(self):
+    def _init_agent(self):
         self.state = self.env.reset()
         s_name = self._get_state_name(self.state)
         self._assert_state_in_QE(s_name, randomized = False)
     
     # using simple decaying epsilon greedy exploration
-    def _curPolicy(self, s, episode_num, use_epsilon):
-        epsilon = 1.00 / (10*episode_num)
+    def _curPolicy(self, s, num_episode, use_epsilon):
+        epsilon = 1.00 / (10*num_episode)
         Q_s = self.Q[s]
         str_act = "unknown"
         rand_value = random()
@@ -144,14 +144,14 @@ class SarsaLambdaAgent(Agent):
         return action
 
     # Agent依据当前策略和状态决定下一步的动作
-    def performPolicy(self, s, episode_num, use_epsilon=True):
-        return self._curPolicy(s, episode_num, use_epsilon)
+    def performPolicy(self, s, num_episode, use_epsilon=True):
+        return self._curPolicy(s, num_episode, use_epsilon)
 
-    def sarsaLambdaLearning(self, lambda_, gamma, alpha, max_episode_num):
+    def sarsaLambdaLearning(self, lambda_, gamma, alpha, max_num_episode):
         total_time = 0
         time_in_episode = 0
         num_episode = 1
-        while num_episode <= max_episode_num:
+        while num_episode <= max_num_episode:
             self._resetEValue()
             s0 = str(self.env.reset())
             self.env.render()
@@ -165,7 +165,7 @@ class SarsaLambdaAgent(Agent):
                 self.env.render()
                 s1 = str(s1)
                 self._assert_state_in_QE(s1, randomized = True)
-                # 在下行代码中添加参数use_epsilon = False即变成Q学习算法
+                
                 a1= self.performPolicy(s1, num_episode)
 
                 q = self._get_(self.Q, s0, a0)
@@ -186,7 +186,7 @@ class SarsaLambdaAgent(Agent):
                         self._set_(self.Q, s, a, new_q)
                         self._set_(self.E, s, a, new_e)
 
-                if num_episode == max_episode_num:
+                if num_episode == max_num_episode:
                     # print current action series
                     print("t:{0:>2}: s:{1}, a:{2:10}, s1:{3}".
                           format(time_in_episode, s0, a0, s1))
@@ -235,80 +235,114 @@ class SarsaLambdaAgent(Agent):
 
 
 class ApproxQAgent(Agent):
-    def __init__(self, env:Env = None,
+    def __init__(self, env: Env = None,
                        trans_capacity = 20000,
-                       input_dim:int,
-                       output_dim:int):
-        super(DQN, self).__init__(env, trans_capacity)
+                       input_dim: int = 1,
+                       hidden_dim: int = 16,
+                       output_dim:int = 1):
+        super(ApproxQAgent, self).__init__(env, trans_capacity)
         self.input_dim = input_dim
-        self.input_dim = output_dim
-        self.Q = NeuralNetwork(input_dim = input_size,
-                                       output_size,
-                                       hidden_dim = 10)
-        self.policy_value_fn = copy(self.value_fn1) # 更新参数
+        self.output_dim = output_dim
+        self.hidden_dim = hidden_dim
+        self.Q = NeuralNetwork(input_dim = input_dim,
+                               output_dim = output_dim,
+                               hidden_dim = hidden_dim)
 
-    def _curPolicy(self, s, episode_num, use_epsilon):
+        self.policy_value_fn = self.Q.copy() # 更新参数的网络
+    
+    def _decayed_epsilon2(self,cur_episode:int):
+        return 1.00 /(cur_episode+1)
+
+    def _decayed_epsilon(self,cur_episode: int, 
+                              min_epsilon: float, 
+                              max_epsilon: float, 
+                              target_episode: int) -> float:
+        '''获得一个在一定范围内的epsilon
+        '''
+        slope = (min_epsilon - max_epsilon) / (target_episode)
+        intercept = max_epsilon
+        return max(min_epsilon, slope * cur_episode + intercept)
+
+    def _curPolicy(self, s, epsilon = None):
         '''依据更新策略的价值函数(网络)产生一个行为
         '''
-        epsilon = 1.00 / (episode_num+1)
-        Q_s = self.policy_value_fn(s)
-        str_act = "unknown"
+        #Q_s = self.policy_value_fn(s)
+        Q_s = self.Q(s)
         rand_value = random()
         action = None
-        if use_epsilon and rand_value < epsilon:  
-            action = self.env.action_space.sample()
-        else:
-            str_act = max(Q_s, key=Q_s.get)
-            action = int(str_act)
-        return action
         
-    def performPolicy(self, s, episode_num, use_epsilon=True):
-        return sefl.curPolicy(s, episode_num, use_episode)
+        if epsilon is None or rand_value < epsilon:
+            return self.env.action_space.sample()
+        else:
+            return int(np.argmax(Q_s))
+        
+    def performPolicy(self, s, epsilon = None):
+        return self._curPolicy(s, epsilon)
 
     def _get_Q(self, s, a):
         '''根据目标价值网络得到一个状态行为价值
         '''
-        return self.target_value_fn(s)[a]
+        Q_s = self.Q(s)[0]
+        return Q_s[a], Q_s
+
+    def _set_Q(self, s, a, v, Q_s):
+        Q_s[a] = v
+        self.policy_value_fn.fit(s, Q_s)
 
     def _update_Q_net(self):
-        self.Q = copy(self.policy_value_fn)
+        self.Q = self.policy_value_fn.copy()
 
-    def learning(self):
-        # self.Position_t_name, self.reward_t1 = self.observe(env)
+    
+    def _learn_from_memory(self, gamma, batch_size=64):
+        trans_pieces = self.sample(batch_size)
+        states_0 = np.vstack([x.s0 for x in trans_pieces])
+        actions_0 = np.vstack([x.a0 for x in trans_pieces])
+        reward_1 = np.vstack([x.reward for x in trans_pieces])
+        is_done = np.vstack([x.is_done for x in trans_pieces])
+        states_1 = np.vstack([x.s1 for x in trans_pieces])
+
+        X_batch = states_0
+        y_batch = self.Q.predict(states_0)
+
+        Q_target = reward_1 + gamma * np.max(self.Q.predict(states_1), axis=1)*\
+            (~ is_done)
+        y_batch[np.arange(len(X_batch)), actions_0] = Q_target
+        
+        return self.Q.update(X_batch, y_batch)
+    
+
+    def learning(self, gamma, alpha, max_episodes, batch_size = 64):
+
         total_time, time_in_episode, num_episode = 0, 0, 0
-
-        while num_episode < max_episode_num:
-            s0 = self.env.reset()
-            self.env.render()
-            a0 = self.performPolicy(s0, num_episode, use_epsilon = True)
-            
+        while num_episode < max_episodes:
+            epsilon = self._decayed_epsilon(cur_episode = num_episode,
+                                            min_epsilon = 0.2, 
+                                            max_epsilon = 0.2,
+                                            target_episode = max_episodes)
+            self.state = self.env.reset()
+            # self.env.render()
             time_in_episode = 0
             is_done = False
+            mean_loss = 0.00
             while not is_done:
-                # a0 = self.performPolicy(s0, num_episode)
-                s1, r1, is_done, info = self.act(a0)
-                self.env.render()
-                # 在下行代码中添加参数use_epsilon = False即变成Q学习算法
-                a1 = self.performPolicy(s1, num_episode, use_epsilon=True)
+                s0 = self.state
 
-                old_q = self._get_Q(s0, a0)
-                q_prime = self._get_Q(s1, a1)
-                td_target = r1 + gamma * q_prime
-                #alpha = alpha / num_episode
-                new_q = old_q + alpha * (td_target - old_q)
-                self.Q.fit(old_q, new_q)
-                
-                if num_episode == max_episode_num:
-                    print("t:{0:>2}: s:{1}, a:{2:2}, s1:{3}".\
-                        format(time_in_episode, s0, a0, s1))
-
-                s0, a0 = s1, a1
+                a0  = self.performPolicy(s0, epsilon)
+                s1, r1, is_done, info, total_reward = self.act(a0)
+                # self.env.render()
                 time_in_episode += 1
-                if num_episode %10 == 0:
-                    self._update_Q_net()
 
-            print("Episode {0} takes {1} steps.".format(
-                num_episode, time_in_episode))
+                if self.total_trans > batch_size:
+                    loss = self._learn_from_memory(gamma, batch_size)
+            
+            # print(loss)
+            mean_loss = np.sum(loss)/ batch_size
+            print("{0} epsilon:{1:>3.2f}, mean loss:{2:>3.2f}"\
+                    .format(self.experience.last, epsilon, mean_loss))
+            print(self.experience)
             total_time += time_in_episode
             num_episode += 1
+
         return   
+
+

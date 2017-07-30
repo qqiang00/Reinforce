@@ -21,15 +21,29 @@ class State(object):
   
 class Transition(object):
     def __init__(self, s0, a0, reward:float, is_done:bool, s1):
-        self.s0 = s0
-        self.a0 = a0
-        self.reward = reward
-        self.is_done = is_done
-        self.s1 = s1
+        self.data = [s0,a0,reward,is_done,s1]
 
+    def __iter__(self):
+        return iter(self.data)
+    
     def __str__(self):
         return "s:{0:<3} a:{1:<3} r:{2:<4} is_end:{3:<5} s1:{4:<3}".\
-            format(self.s0, self.a0, self.reward, self.is_done, self.s1)
+            format(self.data[0], 
+                   self.data[1], 
+                   self.data[2],  
+                   self.data[3], 
+                   self.data[4])
+    @property
+    def reward(self):   return self.data[2]
+    @property
+    def s0(self):   return self.data[0]
+    @property
+    def a0(self):   return self.data[1]
+    @property
+    def is_done(self):   return self.data[3]
+    @property
+    def s1(self):   return self.data[4]
+    
 
 
 class Episode(object):
@@ -48,13 +62,13 @@ class Episode(object):
         return len(self.trans_list)
 
     def __str__(self):
-        return "episode{0:<3} lenth:{1:<4} total_reward:{2:<3}".\
+        return "episode {0:<4} {1:>4} steps,total reward:{2:<8.2f}".\
             format(self.name, self.len,self.total_reward)
 
     def print_detail(self):
         print("detail of ({0}):".format(self))
         for i,trans in enumerate(self.trans_list):
-            print("step{0:<3} ".format(i),end=" ")
+            print("step{0:<4} ".format(i),end=" ")
             print(trans)
 
     def pop(self) -> Transition:
@@ -94,7 +108,7 @@ class Experience(object):
         self.total_trans = 0        # 总的状态转换数量
         
     def __str__(self):
-        return "exp info:{0} episodes, memory usage {1}/{2}".\
+        return "exp info:{0:5} episodes, memory usage {1}/{2}".\
                 format(self.len, self.total_trans, self.capacity)
 
     def __len__(self):
@@ -172,7 +186,7 @@ class Agent(object):
         self.obs_space = env.observation_space if env is not None else None
         self.action_space = env.action_space if env is not None else None
         self.experience = Experience(capacity = trans_capacity)
-        self._state = None   # current observation of an agent
+        self.state = None   # current observation of an agent
     
     def performPolicy(self,policy_fun, s):
         if policy_fun is None:
@@ -180,11 +194,12 @@ class Agent(object):
         return policy_fun(s)
     
     def act(self, a0):
+        s0 = self.state
         s1, r1, is_done, info = self.env.step(a0)
         # TODO add extra code here
-        trans = Transition(self.state, a0, r1, is_done, s1)
+        trans = Transition(s0, a0, r1, is_done, s1)
         total_reward = self.experience.push(trans)
-        self._state = s1
+        self.state = s1
         return s1, r1, is_done, info, total_reward
 
     def learn(self):
@@ -192,9 +207,12 @@ class Agent(object):
         '''
         raise NotImplementedError
 
+    def sample(self, batch_size = 64):
+        return self.experience.sample(batch_size)
 
-
-
+    @property
+    def total_trans(self):
+        return self.experience.total_trans
 
 
     
