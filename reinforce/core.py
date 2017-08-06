@@ -33,18 +33,22 @@ class Transition(object):
                    self.data[2],  
                    self.data[3], 
                    self.data[4])
-    @property
-    def reward(self):   return self.data[2]
+
     @property
     def s0(self):   return self.data[0]
+
     @property
     def a0(self):   return self.data[1]
+
+    @property
+    def reward(self):   return self.data[2]
+    
     @property
     def is_done(self):   return self.data[3]
+
     @property
     def s1(self):   return self.data[4]
     
-
 
 class Episode(object):
     def __init__(self, e_id:int = 0) -> None:
@@ -95,6 +99,7 @@ class Episode(object):
 
     def __len__(self) -> int:
         return self.len
+
 
 class Experience(object):
     '''this class is used to record the whole experience of an agent organized
@@ -158,6 +163,7 @@ class Experience(object):
 
     def sample(self, batch_size=1): # sample transition
         '''randomly sample some transitions from agent's experience.abs
+        随机获取一定数量的状态转化对象Transition
         args:
             number of transitions need to be sampled
         return:
@@ -170,6 +176,8 @@ class Experience(object):
         return sample_trans
 
     def sample_episode(self, episode_num = 1):  # sample episode
+        '''随机获取一定数量完整的Episode
+        '''
         return random.sample(self.episodes, k = episode_num)
 
     @property
@@ -178,7 +186,10 @@ class Experience(object):
             return self.episodes[self.len-1]
         return None
 
+
 class Agent(object):
+    '''Base Class of Agent
+    '''
     def __init__(self, env: Env = None, 
                        trans_capacity = 0):
         # 保存一些Agent可以观测到的环境信息以及已经学到的经验
@@ -186,7 +197,9 @@ class Agent(object):
         self.obs_space = env.observation_space if env is not None else None
         self.action_space = env.action_space if env is not None else None
         self.experience = Experience(capacity = trans_capacity)
+        # 有一个变量记录agent当前的state相对来说还是比较方便的。要注意对该变量的维护、更新
         self.state = None   # current observation of an agent
+        
     
     def performPolicy(self,policy_fun, s):
         if policy_fun is None:
@@ -202,17 +215,19 @@ class Agent(object):
         self.state = s1
         return s1, r1, is_done, info, total_reward
 
-    def learn(self):
+    def learning(self):
         '''need to be implemented by all subclasses
         '''
         raise NotImplementedError
 
     def sample(self, batch_size = 64):
+        '''随机取样
+        '''
         return self.experience.sample(batch_size)
 
     @property
     def total_trans(self):
+        '''得到Experience里记录的总的状态转换数量
+        '''
         return self.experience.total_trans
-
-
     
