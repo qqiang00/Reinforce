@@ -1,5 +1,6 @@
 # Learn Reinforcement Learning with classic GridWorld and PuckWorld Environment compatitable with Gym library.
-I wrote several basic classes describing an agent and two classic environments occured in David Silver's RL open course for beginners to better understand the key points of the algorithms for training an agent in discrete observation spaces. 
+I wrote several basic classes describing the events occured during an agent's interaction with an environment. Also, for RL beginners to better understand how the classic RL algorithms work in discrete observation spaces, I wrote two classic environments: GridWorld and PuckWorld.
+
 Here is the organization of the whole package:
 
 ## [core.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/core.py)
