@@ -1,15 +1,19 @@
 # Learn Reinforcement Learning with classic GridWorld and PuckWorld Environment compatitable with Gym library.
+I wrote several basic classes describing an agent and two classic environments occured in David Silver's RL open course for beginners to better understand the key points of the algorithms for training an agent in discrete observation spaces. 
+Here is the organization of the whole package:
 
 ## [core.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/core.py)
-
 You will find some core classes modeling the object needed in reinforcement learning in this file. These are:
 
 ### Transition
 stores the information describing an agent's state transition. Transition is the basic unit of an Episode.
+
 ### Episode
 stores a list of transition that an agent experience till to one of its end states.
+
 ### Experience
 stores a list of episode. Experience has a capacity limit; it also has a sample method to randomly select a certain number of transitions from its memory.
+
 ### Agent
 this is the base class for all agents implemented for a certain reinforcement learning algorithm. in Agent class, an "act" function wraps the step() function of an environment which interacts with the agent. you can implement your own agent class by deriving this class.
 
@@ -28,6 +32,7 @@ A base GridWorld classe is implemented for generating more specific GridWorld en
 * Skull and Treasure Environment used for explain an agent can benefit from random policy, while a determistic policy may lead to an endless loop.
 You can build your own grid world object just by giving different parameters to its init function. 
 Visit [here](https://zhuanlan.zhihu.com/p/28109312) for more details about how to generate a specific grid world environment object.
+
 ## [puckworld.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/puckworld.py)
 This is another classic environment called "PuckWorld", the idea of which comes from [ReinforceJS](http://cs.stanford.edu/people/karpathy/reinforcejs/puckworld.html). Thanks to Karpathy.
 different from gridworld environment which is a one dimensional discrete observation space and action space, puck world has a continuous observation state space with six dimensions and a discrete action space which can also easily be converted to continuous action space. This is a classic environment for training an agent with Deep Q-Learning Network.
@@ -38,4 +43,6 @@ several seperate .py is provided to understand an algorithm without the classes 
 Hope you enjoy these classes and expect you to make contribution for this package.
 
 Author: Qiang Ye.
+Date: August 16, 2017
+License: MIT
 
