@@ -1,84 +1,41 @@
-Learn Reinforcement Learning with classic GridWorld and PuckWorld Environment compatitable with Gym library.
+# Learn Reinforcement Learning with classic GridWorld and PuckWorld Environment compatitable with Gym library.
 
-## Organization of package
+## [core.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/core.py)
 
-in [core.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/core.py) you will find some core classes modeling the object needed in reinforcement learning. These are:
+You will find some core classes modeling the object needed in reinforcement learning in this file. These are:
 
-### Transitions
+### Transition
+stores the information describing an agent's state transition. Transition is the basic unit of an Episode.
 ### Episode
+stores a list of transition that an agent experience till to one of its end states.
 ### Experience
+stores a list of episode. Experience has a capacity limit; it also has a sample method to randomly select a certain number of transitions from its memory.
 ### Agent
+this is the base class for all agents implemented for a certain reinforcement learning algorithm. in Agent class, an "act" function wraps the step() function of an environment which interacts with the agent. you can implement your own agent class by deriving this class.
 
+## [agents.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/agents.py)
+In this file, you will find some agents class which are already implemented for a certain reinforcement learning algorithms. more agents classes will be added into this file as I practice. Now, you can find agent with sarsa, Q, sarsa(\lambda) algorithms.
 
-Applying recurrent neural networks to natural language tasks, from classification to generation.
+## [approximator.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/approximator.py)
+You can find some classes which performs like a neural network. that's right. Deep neural network is used as an function approximator in RL algorithms, this is so called Deep reinforcement Learning. You will find different types of Agents using different type of function approximators.
 
-* [Classifying Names with a Character-Level RNN](https://github.com/spro/practical-pytorch/blob/master/char-rnn-classification/char-rnn-classification.ipynb)
-* [Generating Shakespeare with a Character-Level RNN](https://github.com/spro/practical-pytorch/blob/master/char-rnn-generation/char-rnn-generation.ipynb)
-* [Generating Names with a Conditional Character-Level RNN](https://github.com/spro/practical-pytorch/blob/master/conditional-char-rnn/conditional-char-rnn.ipynb)
-* [Translation with a Sequence to Sequence Network and Attention](https://github.com/spro/practical-pytorch/blob/master/seq2seq-translation/seq2seq-translation.ipynb)
-* [Exploring Word Vectors with GloVe](https://github.com/spro/practical-pytorch/blob/master/glove-word-vectors/glove-word-vectors.ipynb)
-* *WIP* Sentiment Analysis with a Word-Level RNN and GloVe Embeddings
+## [gridworld.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/gridworld.py)
+A base GridWorld classe is implemented for generating more specific GridWorld environments used in David Silver's RL course, such as:
+* Simple 10×7 Grid world
+* Windy Grid world
+* Random Walk
+* Cliff Walk
+* Skull and Treasure Environment used for explain an agent can benefit from random policy, while a determistic policy may lead to an endless loop.
+You can build your own grid world object just by giving different parameters to its init function. 
+Visit [here](https://zhuanlan.zhihu.com/p/28109312) for more details about how to generate a specific grid world environment object.
+## [puckworld.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/puckworld.py)
+This is another classic environment called "PuckWorld", the idea of which comes from [ReinforceJS](http://cs.stanford.edu/people/karpathy/reinforcejs/puckworld.html). Thanks to Karpathy.
+different from gridworld environment which is a one dimensional discrete observation space and action space, puck world has a continuous observation state space with six dimensions and a discrete action space which can also easily be converted to continuous action space. This is a classic environment for training an agent with Deep Q-Learning Network.
 
-#### Series 2: RNNs for timeseries data
+## [examples](https://github.com/qqiang00/reinforce/tree/master/reinforce/examples)
+several seperate .py is provided to understand an algorithm without the classes mentioned above. you can also find a implementation of Policy Iteration and Value Iteration by using dynamic programming in this folder.
 
-* *WIP* Predicting discrete events with an RNN
+Hope you enjoy these classes and expect you to make contribution for this package.
 
-## Get Started
+Author: Qiang Ye.
 
-The quickest way to run these on a fresh Linux or Mac machine is to install [Anaconda](https://www.continuum.io/anaconda-overview):
-```
-curl -LO https://repo.continuum.io/archive/Anaconda3-4.3.0-Linux-x86_64.sh
-bash Anaconda3-4.3.0-Linux-x86_64.sh
-```
-
-Then install PyTorch:
-
-```
-conda install pytorch -c soumith
-```
-
-Then clone this repo and start Jupyter Notebook:
-
-```
-git clone http://github.com/spro/practical-pytorch
-cd practical-pytorch
-jupyter notebook
-```
-
-## Recommended Reading
-
-### PyTorch basics
-
-* http://pytorch.org/ For installation instructions
-* [Offical PyTorch tutorials](http://pytorch.org/tutorials/) for more tutorials (some of these tutorials are included there)
-* [Deep Learning with PyTorch: A 60-minute Blitz](http://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html) to get started with PyTorch in general
-* [Introduction to PyTorch for former Torchies](https://github.com/pytorch/tutorials/blob/master/Introduction%20to%20PyTorch%20for%20former%20Torchies.ipynb) if you are a former Lua Torch user
-* [jcjohnson's PyTorch examples](https://github.com/jcjohnson/pytorch-examples) for a more in depth overview (including custom modules and autograd functions)
-
-### Recurrent Neural Networks
-
-* [The Unreasonable Effectiveness of Recurrent Neural Networks](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) shows a bunch of real life examples
-* [Deep Learning, NLP, and Representations](http://colah.github.io/posts/2014-07-NLP-RNNs-Representations/) for an overview on word embeddings and RNNs for NLP
-* [Understanding LSTM Networks](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) is about LSTMs work specifically, but also informative about RNNs in general
-
-### Machine translation
-
-* [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation](http://arxiv.org/abs/1406.1078)
-* [Sequence to Sequence Learning with Neural Networks](http://arxiv.org/abs/1409.3215)
-
-### Attention models
-
-* [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)
-* [Effective Approaches to Attention-based Neural Machine Translation](https://arxiv.org/abs/1508.04025)
-
-### Other RNN uses
-
-* [A Neural Conversational Model](http://arxiv.org/abs/1506.05869)
-
-### Other PyTorch tutorials
-
-* [Deep Learning For NLP In PyTorch](https://github.com/rguthrie3/DeepLearningForNLPInPytorch)
-
-## Feedback
-
-If you have ideas or find mistakes [please leave a note](https://github.com/spro/practical-pytorch/issues/new).
