@@ -1,4 +1,4 @@
-# Learn reinforcement learning with classic GridWorld and PuckWorld Environment compatitable with Gym library.
+# Learn reinforcement learning with classic GridWorld and PuckWorld Environments compatitable with Gym library.
 I wrote several basic classes describing the events occured during an agent's interaction with an environment. Also, for RL beginners to better understand how the classic RL algorithms work in discrete observation spaces, I wrote two classic environments:GridWorld and PuckWorld. You can copy these two environments into your gym library and just make a little bit of modification to your gym library to use these two environments just like you use the environments in Gym library.
 
 Here is the organization of the whole package:
