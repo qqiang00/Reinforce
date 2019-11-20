@@ -3,7 +3,7 @@ I wrote several basic classes describing the events occured during an agent's in
 
 You can copy these two environments into your gym library and by just making a few modification, these two environments can be used the same as the embeded environments in Gym.
 
-Here is the organization of the whole package:
+Please go to the **sub-folder** "reinforce" to see the organization of the whole package:
 
 ## [core.py](https://github.com/qqiang00/reinforce/blob/master/reinforce/core.py)
 You will find some core classes modeling the object needed in reinforcement learning in this file. These are:
