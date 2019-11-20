@@ -21,13 +21,13 @@ class Grid(object):
                        y:int = None, 
                        type:int = 0, 
                        reward:int = 0.0,
-                       value:float = 0.0):  # value 属性备用
-        self.x = x                  # 坐标x
+                       value:float = 0.0):  # value, for possible future usage
+        self.x = x                  # coordinate x
         self.y = y
-        self.type = value           # 类别值(0:空；1:障碍或边界)
-        self.reward = reward        # 该格子的即时奖励
-        self.value = value          # 该格子的价值，暂没用上
-        self.name = None            # 该格子的名称
+        self.type = value           # Type (0:empty；1:obstacle or boundary)
+        self.reward = reward        # instant reward for an agent entering this grid cell
+        self.value = value          # the value of this grid cell, for future usage
+        self.name = None            # name of this grid.
         self._update_name()
 
     def _update_name(self):
@@ -45,11 +45,11 @@ class Grid(object):
 class GridMatrix(object):
     '''格子矩阵，通过不同的设置，模拟不同的格子世界环境
     '''
-    def __init__(self, n_width:int,                     # 水平方向格子数
-                       n_height:int,                    # 竖直方向格子数
-                       default_type: int = 0,           # 默认类型
-                       default_reward: float = 0.0,     # 默认即时奖励值
-                       default_value: float = 0.0       # 默认价值（这个有点多余）
+    def __init__(self, n_width:int,                     # defines the number of cells horizontally
+                       n_height:int,                    # vertically
+                       default_type: int = 0,           # default cell type
+                       default_reward: float = 0.0,     # default instant reward
+                       default_value: float = 0.0       # default value
                        ):
         self.grids = None
         self.n_height = n_height
@@ -71,8 +71,8 @@ class GridMatrix(object):
                                        self.default_value))
     
     def get_grid(self, x, y=None):
-        '''获取一个格子信息
-        args: 坐标信息，由x,y表示或仅有一个类型为tuple的x表示
+        '''get a grid information
+        args: represented by x,y or just a tuple type of x
         return: grid object
         '''
         xx, yy = None, None
@@ -81,7 +81,7 @@ class GridMatrix(object):
         elif isinstance(x, tuple):
             xx, yy = x[0], x[1]
         assert(xx>=0 and yy>=0 and xx < self.n_width and yy < self.n_height),\
-                "任意坐标值应在合理区间"
+                "coordinates should be in reasonable range"
         index = yy * self.n_width + xx
         return self.grids[index]
 
@@ -139,11 +139,11 @@ class GridWorldEnv(gym.Env):
                        default_reward:float = 0,
                        default_type = 0,
                        windy=False):
-        self.u_size = u_size             # 当前格子绘制尺寸
-        self.n_width = n_width           # 格子世界宽度（以格子数计）
-        self.n_height = n_height         # 高度
-        self.width = u_size * n_width    # 场景宽度 screen width
-        self.height = u_size * n_height  # 场景长度
+        self.u_size = u_size             # size for each cell (pixels)
+        self.n_width = n_width           # width of the env calculated by number of cells.
+        self.n_height = n_height         # height...
+        self.width = u_size * n_width    # scenario width (pixels)
+        self.height = u_size * n_height  # height
         self.default_reward = default_reward
         self.default_type = default_type
         self._adjust_size()
@@ -155,19 +155,20 @@ class GridWorldEnv(gym.Env):
                                 default_value = 0.0)    
         self.reward = 0         # for rendering
         self.action = None      # for rendering
-        self.windy = windy      # 是否是有风格子世界
+        self.windy = windy      # whether this is a windy environment
 
         # 0,1,2,3,4 represent left, right, up, down, -, five moves.
         self.action_space = spaces.Discrete(4)  
         # 观察空间由low和high决定
         self.observation_space = spaces.Discrete(self.n_height * self.n_width)
-        # 坐标原点为左下角，这个pyglet是一致的
+        # 坐标原点为左下角，这个pyglet是一致的, left-bottom corner is the position of (0,0)
         # 通过设置起始点、终止点以及特殊奖励和类型的格子可以构建各种不同类型的格子世界环境
         # 比如：随机行走、汽车租赁、悬崖行走等David Silver公开课中的示例
-        self.ends = [(7,3)]     # 终止格子坐标，可以有多个
-        self.start = (0,3)      # 起始格子坐标，只有一个
-        self.types = []         # 特殊种类的格子在此设置。[(3,2,1)]表示(3,2)处值为1
-        self.rewards= []        # 特殊奖励的格子在此设置，终止格子奖励0
+        self.ends = [(7,3)]     # 终止格子坐标，可以有多个, goal cells position list
+        self.start = (0,3)      # 起始格子坐标，只有一个, start cell position, only one start position
+        self.types = []         # 特殊种类的格子在此设置。[(3,2,1)]表示(3,2)处值为1.
+                                # special type of cells, (x,y,z) represents in position(x,y) the cell type is z
+        self.rewards= []        # 特殊奖励的格子在此设置，终止格子奖励0, special reward for a cell
         self.refresh_setting()
         self.viewer = None      # 图形接口对象
         self._seed()    # 产生一个随机子
@@ -194,6 +195,7 @@ class GridWorldEnv(gym.Env):
 
         # wind effect:
         # 有风效果，其数字表示个体离开(而不是进入)该格子时朝向别的方向会被吹偏离的格子数
+        # this effect is just used for the windy env in David Silver's youtube video.
         if self.windy:
             if new_x in [3, 4, 5, 8]:
                 new_y += 1
@@ -215,7 +217,7 @@ class GridWorldEnv(gym.Env):
         if new_y < 0: new_y = 0
         if new_y >= self.n_height: new_y = self.n_height-1
 
-        # wall effect:
+        # wall effect, obstacles or boundary.
         # 类型为1的格子为障碍格子，不可进入
         if self.grids.get_type(new_x,new_y) == 1:
             new_x, new_y = old_x, old_y
@@ -228,7 +230,7 @@ class GridWorldEnv(gym.Env):
         info = {"x":new_x,"y":new_y, "grids":self.grids}
         return self.state, self.reward, done, info
     
-    # 将状态变为横纵坐标
+    # 将状态变为横纵坐标, set status into an one-axis coordinate value
     def _state_to_xy(self, s):
         x = s % self.n_width
         y = int((s - x) / self.n_width)
@@ -240,7 +242,7 @@ class GridWorldEnv(gym.Env):
             return x + self.n_width * y
         elif isinstance(x, tuple):
             return x[0] + self.n_width * x[1]
-        return -1        # 未知状态
+        return -1        # 未知状态, unknow status
 
     def refresh_setting(self):
         '''用户在使用该类创建格子世界后可能会修改格子世界某些格子类型或奖励值
@@ -262,14 +264,14 @@ class GridWorldEnv(gym.Env):
         elif isinstance(x, int):
             xx, yy = self._state_to_xy(x)
         else:
-            assert(isinstance(x, tuple)),"坐标数据不完整"
+            assert(isinstance(x, tuple)),"incomplete coordinate values"
             xx ,yy = x[0], x[1]
         for end in self.ends:
             if xx == end[0] and yy == end[1]:
                 return True
         return False
 
-    # 图形化界面
+    # 图形化界面, Graphic UI
     def _render(self, mode='human', close=False):
         if close:
             if self.viewer is not None:
@@ -278,7 +280,7 @@ class GridWorldEnv(gym.Env):
             return
         zero = (0,0)
         u_size = self.u_size
-        m = 2       # 格子之间的间隙尺寸
+        m = 2       # gaps between two cells
 
         # 如果还没有设定屏幕对象，则初始化整个屏幕具备的元素。
         if self.viewer is None:
@@ -286,6 +288,7 @@ class GridWorldEnv(gym.Env):
             self.viewer = rendering.Viewer(self.width, self.height)
 
             # 在Viewer里绘制一个几何图像的步骤如下：
+            # the following steps just tells how to render an shape in the environment.
             # 1. 建立该对象需要的数据本身
             # 2. 使用rendering提供的方法返回一个geom对象
             # 3. 对geom对象进行一些对象颜色、线宽、线型、变换属性的设置（有些对象提供一些个
@@ -313,7 +316,7 @@ class GridWorldEnv(gym.Env):
                 self.viewer.add_geom(line)
             '''
 
-            # 绘制格子
+            # 绘制格子, draw cells
             for x in range(self.n_width):
                 for y in range(self.n_height):
                     v = [(x*u_size+m, y*u_size+m),
@@ -330,7 +333,7 @@ class GridWorldEnv(gym.Env):
                     else:
                         rect.set_color(0.9,0.9,0.9)
                     self.viewer.add_geom(rect)
-                    # 绘制边框
+                    # 绘制边框, draw frameworks
                     v_outline = [(x*u_size+m, y*u_size+m),
                                      ((x+1)*u_size-m, y*u_size+m),
                                      ((x+1)*u_size-m, (y+1)*u_size-m),
@@ -339,24 +342,24 @@ class GridWorldEnv(gym.Env):
                     outline.set_linewidth(3)
                         
                     if self._is_end_state(x,y):
-                        # 给终点方格添加金黄色边框
+                        # 给终点方格添加金黄色边框, give end state cell a yellow outline.
                         outline.set_color(0.9,0.9,0)
                         self.viewer.add_geom(outline)
                     if self.start[0] == x and self.start[1] == y:
                         outline.set_color(0.5, 0.5, 0.8)
                         self.viewer.add_geom(outline)
-                    if self.grids.get_type(x,y) == 1: # 障碍格子用深灰色表示
+                    if self.grids.get_type(x,y) == 1: # 障碍格子用深灰色表示, obstacle cells are with gray color
                         rect.set_color(0.3,0.3,0.3)
                     else:
                         pass
-            # 绘制个体
+            # 绘制个体, draw agent
             self.agent = rendering.make_circle(u_size/4, 30, True)
             self.agent.set_color(1.0, 1.0, 0.0)
             self.viewer.add_geom(self.agent)
             self.agent_trans = rendering.Transform()
             self.agent.add_attr(self.agent_trans)
 
-        # 更新个体位置
+        # 更新个体位置 update position of an agent
         x, y = self._state_to_xy(self.state)
         self.agent_trans.set_translation((x+0.5)*u_size, (y+0.5)*u_size)        
 
@@ -451,6 +454,7 @@ def CliffWalk():
 
 def SkullAndTreasure():
     '''骷髅与钱币示例，解释随机策略的有效性 David Silver 强化学习公开课第六讲 策略梯度
+    Examples of Skull and Money explained the necessity and effectiveness
     '''
     env = GridWorldEnv(n_width=5,
                        n_height = 2,
